@@ -1,0 +1,7 @@
+query getHasNewNotifications {
+  getHasNewNotifications {
+    hasNewNotifications
+    numUnreadNotifications
+    __typename
+  }
+}

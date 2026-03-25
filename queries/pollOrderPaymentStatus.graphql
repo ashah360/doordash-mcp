@@ -1,0 +1,28 @@
+query pollOrderPaymentStatus($orderId: ID!) {
+  pollOrderPaymentStatus(orderId: $orderId) {
+    paid
+    paymentStatus
+    errorType
+    errorMessage
+    cardScanMetaData {
+      civId
+      clientSecret
+      __typename
+    }
+    threeDSecureMetaData {
+      clientSecret
+      provider
+      key
+      __typename
+    }
+    failedParticipants {
+      consumerId
+      localizedName {
+        fullPrivatizedName
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}

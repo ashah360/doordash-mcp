@@ -1,0 +1,8 @@
+query convenienceSearchQuery($input: RetailSearchInput!) {
+  retailSearch(input: $input) {
+    legoRetailItems {
+      id
+      custom
+    }
+  }
+}

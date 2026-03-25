@@ -1,0 +1,21 @@
+query validateConsumerAddressWithAddressLinkId($addressLinkId: ID!) {
+  validateConsumerAddress(addressLinkId: $addressLinkId) {
+    cartMessage {
+      code
+      type
+      message
+      __typename
+    }
+    validationResults {
+      code
+      type
+      __typename
+    }
+    userActions {
+      userActionType
+      isCheckoutBlocked
+      __typename
+    }
+    __typename
+  }
+}

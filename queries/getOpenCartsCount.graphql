@@ -1,0 +1,3 @@
+query getOpenCartsCount($input: GetOpenCartsCountInput!) {
+  getOpenCartsCount(input: $input)
+}

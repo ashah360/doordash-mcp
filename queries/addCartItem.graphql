@@ -1,0 +1,32 @@
+mutation addCartItem(
+  $addCartItemInput: AddCartItemInput!
+  $fulfillmentContext: FulfillmentContextInput!
+  $cartContext: CartContextInput
+  $returnCartFromOrderService: Boolean
+  $monitoringContext: MonitoringContextInput
+  $lowPriorityBatchAddCartItemInput: [AddCartItemInput!]
+  $shouldKeepOnlyOneActiveCart: Boolean
+) {
+  addCartItemV2(
+    addCartItemInput: $addCartItemInput
+    fulfillmentContext: $fulfillmentContext
+    cartContext: $cartContext
+    returnCartFromOrderService: $returnCartFromOrderService
+    monitoringContext: $monitoringContext
+    lowPriorityBatchAddCartItemInput: $lowPriorityBatchAddCartItemInput
+    shouldKeepOnlyOneActiveCart: $shouldKeepOnlyOneActiveCart
+  ) {
+    id
+    subtotal
+    orders {
+      orderItems {
+        id
+        quantity
+        item {
+          id
+          name
+        }
+      }
+    }
+  }
+}

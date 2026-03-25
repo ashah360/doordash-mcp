@@ -1,0 +1,347 @@
+query detailedCartItems($orderCartId: ID!, $corporateIndividualOrdersEnabled: Boolean, $deliveryOptionType: DeliveryOptionType, $isCardPayment: Boolean) {
+  orderCart(
+    id: $orderCartId
+    corporateIndividualOrdersEnabled: $corporateIndividualOrdersEnabled
+    deliveryOptionType: $deliveryOptionType
+    isCardPayment: $isCardPayment
+  ) {
+    id
+    ...InvalidItemsFragment
+    subtotal
+    isSameStoreCatering
+    isConvenienceCart
+    orders {
+      id
+      consumer {
+        id
+        firstName
+        lastName
+        localizedNames {
+          informalName
+          formalName
+          formalNameAbbreviated
+          __typename
+        }
+        __typename
+      }
+      isSubCartFinalized
+      splitBillSubcartStatus
+      lineItems {
+        ...lineItemFragment
+        __typename
+      }
+      paymentCard {
+        id
+        stripeId
+        __typename
+      }
+      paymentLineItems {
+        subtotal
+        taxAmount
+        subtotalTaxAmount
+        feesTaxAmount
+        serviceFee
+        __typename
+      }
+      orderItems {
+        __typename
+        id
+        cartItemStatusType
+        options {
+          id
+          name
+          quantity
+          price
+          nestedOptions
+          __typename
+        }
+        nestedOptions
+        specialInstructions
+        substitutionPreference
+        quantity
+        singlePrice
+        priceOfTotalQuantity
+        nonDiscountPriceDisplayString
+        priceDisplayString
+        continuousQuantity
+        unit
+        purchaseType
+        estimatedPricingDescription
+        isPrescriptionItem
+        increment {
+          decimalPlaces
+          unitAmount
+          __typename
+        }
+        itemLevelDiscount {
+          promoId
+          promoCode
+          externalCampaignId
+          __typename
+        }
+        discounts {
+          ...OrderItemDiscountFragment
+          __typename
+        }
+        item {
+          id
+          restrictionInfo {
+            type
+            rulesList {
+              ruleName
+              intValue
+              stringValue
+              boolValue
+              floatValue
+              __typename
+            }
+            __typename
+          }
+          imageUrl
+          name
+          price
+          minAgeRequirement
+          category {
+            title
+            __typename
+          }
+          extras {
+            id
+            title
+            description
+            __typename
+          }
+          itemTagsList {
+            tagType
+            localizedName
+            shortName
+            id
+            description
+            displayType
+            __typename
+          }
+          storeId
+          businessId
+          __typename
+        }
+        bundleStore {
+          ...OrderItemBundleFragment
+          __typename
+        }
+        giftInfo {
+          ...CartItemGiftInfoFragment
+          __typename
+        }
+        badges {
+          ...BadgeFragment
+          __typename
+        }
+        nudgeList {
+          ...NudgeFragment
+          __typename
+        }
+        promoNudgeList {
+          ...PromoNudgeFragment
+          __typename
+        }
+        itemLimitData {
+          ...ItemLimitDataFragment
+          __typename
+        }
+      }
+      __typename
+    }
+    total
+    totalBeforeDiscountsAndCredits
+    footerDetails {
+      title
+      subtitle
+      __typename
+    }
+    outOfStockMenuItemIds
+    __typename
+  }
+}
+
+fragment InvalidItemsFragment on OrderCart {
+  invalidItems {
+    itemId
+    storeId
+    itemQuantityInfo {
+      discreteQuantity {
+        quantity
+        unit
+        __typename
+      }
+      continuousQuantity {
+        quantity
+        unit
+        __typename
+      }
+      __typename
+    }
+    name
+    itemExtrasList
+    menuId
+    __typename
+  }
+  __typename
+}
+
+fragment OrderItemDiscountFragment on OrderItemDiscount {
+  id
+  finalMoney {
+    ...DiscountMonetaryFieldsFragment
+    __typename
+  }
+  badges {
+    ...BadgeFragment
+    __typename
+  }
+  adsMetadata {
+    ...DiscountAdsMetadataFragment
+    __typename
+  }
+  __typename
+}
+
+fragment DiscountMonetaryFieldsFragment on AmountMonetaryFields {
+  currency
+  displayString
+  decimalPlaces
+  unitAmount
+  sign
+  __typename
+}
+
+fragment BadgeFragment on Badge {
+  isDashpass
+  type
+  text
+  backgroundColor
+  styleType
+  dlsTagSize
+  dlsTextStyle
+  dlsTagStyle
+  dlsTagType
+  placement
+  leadingIcon
+  leadingIconSize
+  trailingIcon
+  trailingIconSize
+  endTime
+  dlsTextColor
+  brandedDecorator {
+    prefixText
+    postfixText
+    postfixTextLeadingIcon
+    __typename
+  }
+  trailingText {
+    copy
+    dlsTextStyle
+    dlsTextColor
+    __typename
+  }
+  onClick
+  __typename
+}
+
+fragment DiscountAdsMetadataFragment on AdsMetadata {
+  campaignId
+  adGroupId
+  auctionId
+  __typename
+}
+
+fragment CartItemGiftInfoFragment on CartItemGiftInfo {
+  recipientName
+  recipientPhone
+  recipientEmail
+  cardMessage
+  senderName
+  imageId
+  imageUrl
+  deliveryChannel
+  __typename
+}
+
+fragment NudgeFragment on Nudge {
+  nudgeMessage {
+    text
+    icon
+    color
+    textStyle
+    __typename
+  }
+  progress
+  collectionModalDeeplink
+  __typename
+}
+
+fragment PromoNudgeFragment on PromoNudge {
+  ... on AddItemNudge {
+    nudgeMessage {
+      text
+      icon
+      color
+      __typename
+    }
+    collectionModalDeeplink
+    progress
+    __typename
+  }
+  ... on ClipCouponNudge {
+    nudgeMessage {
+      text
+      icon
+      color
+      __typename
+    }
+    buttonText
+    incentiveId
+    __typename
+  }
+  __typename
+}
+
+fragment OrderItemBundleFragment on OrderItemBundleStore {
+  id
+  name
+  businessId
+  isPrimary
+  isRetail
+  __typename
+}
+
+fragment ItemLimitDataFragment on ItemLimitData {
+  limit
+  __typename
+}
+
+fragment lineItemFragment on LineItem {
+  label
+  labelIcon
+  discountIcon
+  chargeId
+  finalMoney {
+    unitAmount
+    displayString
+    __typename
+  }
+  originalMoney {
+    unitAmount
+    displayString
+    __typename
+  }
+  tooltip {
+    title
+    paragraphs {
+      description
+      __typename
+    }
+    __typename
+  }
+  note
+  __typename
+}

@@ -1,0 +1,5 @@
+mutation removeCartItemV2($cartId: ID!, $itemId: ID!) {
+  removeCartItemV2(cartId: $cartId, itemId: $itemId) {
+    id
+  }
+}

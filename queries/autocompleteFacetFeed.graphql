@@ -1,0 +1,20 @@
+query autocompleteFacetFeed($query: String!) {
+  autocompleteFacetFeed(query: $query) {
+    body {
+      id
+      body {
+        id
+        text {
+          title
+          subtitle
+          description
+        }
+        events {
+          click {
+            data
+          }
+        }
+      }
+    }
+  }
+}

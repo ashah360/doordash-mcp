@@ -1,0 +1,27 @@
+query listCarts($input: ListCartsInput!) {
+  listCarts(input: $input) {
+    id
+    subtotal
+    groupCart
+    restaurant {
+      id
+      name
+      business {
+        name
+      }
+    }
+    orders {
+      orderItems {
+        id
+        quantity
+        singlePrice
+        nestedOptions
+        specialInstructions
+        item {
+          id
+          name
+        }
+      }
+    }
+  }
+}
