@@ -2,18 +2,7 @@
 
 An MCP server that lets AI agents order food, groceries, and more through DoorDash. Search restaurants, browse menus, build carts, and place orders — all programmatically.
 
-Built with [CycleTLS](https://github.com/Danny-Dasilva/CycleTLS), the [Model Context Protocol SDK](https://github.com/modelcontextprotocol/typescript-sdk), and DoorDash's internal GraphQL API.
-
-## What changed
-
-This is a complete rewrite. The previous version ran a full headless Chromium browser (via Patchright) and executed `fetch()` inside the page context to inherit a valid TLS fingerprint. It worked, but:
-
-- Required a **200MB+ Chromium download** just to make HTTP requests
-- Needed a **manual headed login** to earn Cloudflare clearance before anything worked
-- Sessions broke on restart — you'd have to re-login in a real browser
-- Auth was labeled "WIP" because automated headless login was unreliable
-
-This version **has no browser dependency at all**. CycleTLS spoofs a Chrome JA3 TLS fingerprint directly at the network level, so requests pass through Cloudflare without needing an actual browser. Login is fully automated with email + password + MFA, sessions persist to disk, and the whole thing starts in milliseconds.
+Built with [CycleTLS](https://github.com/Danny-Dasilva/CycleTLS), the [Model Context Protocol SDK](https://github.com/modelcontextprotocol/typescript-sdk), and DoorDash's internal GraphQL API. No browser, Chromium, or Puppeteer/Playwright required.
 
 ## Setup
 
@@ -85,49 +74,49 @@ The MCP endpoint will be available at `http://localhost:3000/mcp`.
 
 ### Discovery
 
-| Tool | Description |
-|------|-------------|
-| `doordash_search` | Search restaurants and stores by name, cuisine, or food type |
-| `doordash_menu` | Get a restaurant's full menu with items, prices, and option flags |
-| `doordash_convenience_search` | Search items within grocery/convenience/alcohol stores |
-| `doordash_item_options` | Get customization options for menu items (sides, extras, sizes) |
+| Tool                          | Description                                                       |
+| ----------------------------- | ----------------------------------------------------------------- |
+| `doordash_search`             | Search restaurants and stores by name, cuisine, or food type      |
+| `doordash_menu`               | Get a restaurant's full menu with items, prices, and option flags |
+| `doordash_convenience_search` | Search items within grocery/convenience/alcohol stores            |
+| `doordash_item_options`       | Get customization options for menu items (sides, extras, sizes)   |
 
 ### Cart
 
-| Tool | Description |
-|------|-------------|
+| Tool                   | Description                                         |
+| ---------------------- | --------------------------------------------------- |
 | `doordash_add_to_cart` | Add items to cart with nested customization options |
-| `doordash_cart` | View all active carts with items and subtotals |
-| `doordash_modify_cart` | Update item quantity or remove items |
-| `doordash_delete_cart` | Delete a cart |
+| `doordash_cart`        | View all active carts with items and subtotals      |
+| `doordash_modify_cart` | Update item quantity or remove items                |
+| `doordash_delete_cart` | Delete a cart                                       |
 
 ### Checkout
 
-| Tool | Description |
-|------|-------------|
-| `doordash_checkout` | Preview fees, delivery time, and total |
-| `doordash_place_order` | Place an order (charges the account) |
-| `doordash_order_status` | Check payment and delivery status |
+| Tool                    | Description                            |
+| ----------------------- | -------------------------------------- |
+| `doordash_checkout`     | Preview fees, delivery time, and total |
+| `doordash_place_order`  | Place an order (charges the account)   |
+| `doordash_order_status` | Check payment and delivery status      |
 
 ### Group Orders
 
-| Tool | Description |
-|------|-------------|
-| `doordash_create_group_order` | Create a group order and get a share link |
+| Tool                          | Description                                      |
+| ----------------------------- | ------------------------------------------------ |
+| `doordash_create_group_order` | Create a group order and get a share link        |
 | `doordash_group_order_status` | View each person's items and finalization status |
 
 ### Account
 
-| Tool | Description |
-|------|-------------|
-| `doordash_login` | Automated login with email + password |
-| `doordash_verify` | Enter MFA verification code |
-| `doordash_orders` | View order history |
-| `doordash_addresses` | List saved delivery addresses |
-| `doordash_set_address` | Set active delivery address |
-| `doordash_add_address` | Add a new delivery address |
-| `doordash_payment_methods` | List saved payment methods |
-| `doordash_add_card` | Add a payment card (tokenized via Stripe) |
+| Tool                       | Description                               |
+| -------------------------- | ----------------------------------------- |
+| `doordash_login`           | Automated login with email + password     |
+| `doordash_verify`          | Enter MFA verification code               |
+| `doordash_orders`          | View order history                        |
+| `doordash_addresses`       | List saved delivery addresses             |
+| `doordash_set_address`     | Set active delivery address               |
+| `doordash_add_address`     | Add a new delivery address                |
+| `doordash_payment_methods` | List saved payment methods                |
+| `doordash_add_card`        | Add a payment card (tokenized via Stripe) |
 
 ## How it works
 
