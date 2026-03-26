@@ -337,13 +337,12 @@ export function registerTools(server: McpServer, api: APIs): void {
       external_user_id,
     }) =>
       wrap(async () => {
-        const guest =
-          external_user_id && cart_id
-            ? api.guests.getSession(cart_id, external_user_id)
-            : undefined;
+        const guest = external_user_id
+          ? api.guests.getSession(external_user_id)
+          : undefined;
         if (external_user_id && !guest) {
           return err(
-            `No guest session for user "${external_user_id}" on cart ${cart_id}. Call doordash_join_group_order first.`,
+            `No guest session for user "${external_user_id}". Call doordash_join_group_order first.`,
           );
         }
         const cartApi = guest?.cart ?? api.cart;
@@ -480,7 +479,7 @@ export function registerTools(server: McpServer, api: APIs): void {
     ({ cart_id, item_id, action, quantity, store_id, external_user_id }) =>
       wrap(async () => {
         const guest = external_user_id
-          ? api.guests.getSession(cart_id, external_user_id)
+          ? api.guests.getSession(external_user_id)
           : undefined;
         const cartApi = guest?.cart ?? api.cart;
 
@@ -937,10 +936,10 @@ export function registerTools(server: McpServer, api: APIs): void {
     },
     ({ cart_id, external_user_id }) =>
       wrap(async () => {
-        const session = api.guests.getSession(cart_id, external_user_id);
+        const session = api.guests.getSession(external_user_id);
         if (!session) {
           return err(
-            `No guest session for user "${external_user_id}" on cart ${cart_id}.`,
+            `No guest session for user "${external_user_id}". Call doordash_join_group_order first.`,
           );
         }
         await api.guests.finalizeGuestOrder(cart_id, external_user_id);

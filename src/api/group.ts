@@ -36,14 +36,18 @@ export class GroupAPI {
 
   async getGroupCart(cartId: string): Promise<GroupOrder> {
     const data = await this.gql.query<any>(
-      "getGroupCart",
-      { cartId },
-      `query getGroupCart($cartId: ID!) {
-        getGroupCart(cartId: $cartId) {
+      "groupCart",
+      { id: cartId, shouldApplyAutocheckoutConfig: true },
+      `query groupCart($id: ID!, $shouldApplyAutocheckoutConfig: Boolean) {
+        orderCart(id: $id, shouldApplyAutocheckoutConfig: $shouldApplyAutocheckoutConfig) {
           id groupCart groupCartType shortenedUrl subtotal
           orders {
             id
-            consumer { firstName lastName __typename }
+            consumer {
+              firstName lastName id
+              localizedNames { informalName formalName formalNameAbbreviated __typename }
+              __typename
+            }
             orderItems {
               id quantity
               item { name __typename }
@@ -58,23 +62,29 @@ export class GroupAPI {
       }`,
     );
 
-    const gc = data?.getGroupCart;
+    const gc = data?.orderCart;
     if (!gc) throw new Error("Could not load group order.");
 
     return {
       id: gc.id,
       shareUrl: gc.shortenedUrl ?? "",
       subtotal: gc.subtotal ?? 0,
-      members: (gc.orders ?? []).map((order: any) => ({
-        name: `${order.consumer?.firstName ?? "?"} ${order.consumer?.lastName ?? ""}`.trim(),
-        isFinalized: !!order.isSubCartFinalized,
-        items: (order.orderItems ?? []).map((item: any) => ({
-          id: item.id ?? "",
-          name: item.item?.name ?? "?",
-          quantity: item.quantity ?? 1,
-          price: item.singlePrice ?? 0,
-        })),
-      })),
+      members: (gc.orders ?? []).map((order: any) => {
+        const c = order.consumer;
+        const name =
+          c?.localizedNames?.formalNameAbbreviated ||
+          `${c?.firstName ?? "?"} ${c?.lastName ?? ""}`.trim();
+        return {
+          name,
+          isFinalized: !!order.isSubCartFinalized,
+          items: (order.orderItems ?? []).map((item: any) => ({
+            id: item.id ?? "",
+            name: item.item?.name ?? "?",
+            quantity: item.quantity ?? 1,
+            price: item.singlePrice ?? 0,
+          })),
+        };
+      }),
     };
   }
 }

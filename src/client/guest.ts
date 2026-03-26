@@ -63,15 +63,18 @@ mutation setIsSubCartFinalized($cartId: ID!, $isSubCartFinalized: Boolean!, $car
 }`;
 
 export class GuestSessionStore {
-  /** cartId -> externalUserId -> GuestSession */
-  private sessions = new Map<string, Map<string, GuestSession>>();
+  private sessions = new Map<string, GuestSession>();
 
   constructor(private http: HttpClient) {}
 
-  getSession(cartId: string, externalUserId: string): GuestSession | undefined {
-    return this.sessions.get(cartId)?.get(externalUserId);
+  getSession(externalUserId: string): GuestSession | undefined {
+    return this.sessions.get(externalUserId);
   }
 
+  /**
+   * Ensure a guest session exists for this user. If one already exists,
+   * just register them on the new cart. If not, create a fresh guest identity.
+   */
   async joinGroupOrder(params: {
     cartId: string;
     storeId: string;
@@ -79,15 +82,38 @@ export class GuestSessionStore {
     firstName: string;
     lastName: string;
   }): Promise<GuestSession> {
-    const existing = this.getSession(params.cartId, params.externalUserId);
-    if (existing) return existing;
+    const existing = this.sessions.get(params.externalUserId);
+
+    if (existing) {
+      const nameChanged =
+        existing.firstName !== params.firstName ||
+        existing.lastName !== params.lastName;
+      if (nameChanged) {
+        await existing.gql.query<any>(
+          "editConsumerProfileInformation",
+          { firstName: params.firstName, lastName: params.lastName },
+          EDIT_PROFILE_MUTATION,
+        );
+        existing.firstName = params.firstName;
+        existing.lastName = params.lastName;
+        log(`updated guest name to ${params.firstName} ${params.lastName}`);
+      }
+
+      await existing.gql.query(
+        "groupCart",
+        { id: params.cartId, shouldApplyAutocheckoutConfig: true },
+        GROUP_CART_QUERY,
+      );
+      log(
+        `registered ${params.firstName} ${params.lastName} on cart ${params.cartId}`,
+      );
+      return existing;
+    }
 
     const jar = new CookieJar();
     const ctx = new GuestSessionContext(jar);
 
-    log(
-      `joining group order ${params.cartId} as ${params.firstName} ${params.lastName}...`,
-    );
+    log(`creating guest session for ${params.firstName} ${params.lastName}...`);
 
     const guestUrl =
       `https://www.doordash.com/consumer/guest/` +
@@ -99,8 +125,6 @@ export class GuestSessionStore {
       headers: { Accept: "text/html" },
       cookieJar: jar,
     });
-
-    log(`guest session established, setting profile...`);
 
     const gql = new GraphQLClient(this.http, ctx);
     const cart = new CartAPI(gql);
@@ -120,7 +144,7 @@ export class GuestSessionStore {
       { id: params.cartId, shouldApplyAutocheckoutConfig: true },
       GROUP_CART_QUERY,
     );
-    log(`guest sub-cart initialized`);
+    log(`guest registered on cart ${params.cartId}`);
 
     const guest: GuestSession = {
       session: ctx,
@@ -131,11 +155,7 @@ export class GuestSessionStore {
       lastName: params.lastName,
     };
 
-    if (!this.sessions.has(params.cartId)) {
-      this.sessions.set(params.cartId, new Map());
-    }
-    this.sessions.get(params.cartId)!.set(params.externalUserId, guest);
-
+    this.sessions.set(params.externalUserId, guest);
     return guest;
   }
 
@@ -143,11 +163,8 @@ export class GuestSessionStore {
     cartId: string,
     externalUserId: string,
   ): Promise<void> {
-    const guest = this.getSession(cartId, externalUserId);
-    if (!guest)
-      throw new Error(
-        `No guest session for user ${externalUserId} on cart ${cartId}.`,
-      );
+    const guest = this.sessions.get(externalUserId);
+    if (!guest) throw new Error(`No guest session for user ${externalUserId}.`);
 
     await guest.gql.query(
       "setIsSubCartFinalized",
@@ -156,9 +173,5 @@ export class GuestSessionStore {
     );
 
     log(`finalized sub-cart for ${guest.firstName} ${guest.lastName}`);
-  }
-
-  clearCart(cartId: string): void {
-    this.sessions.delete(cartId);
   }
 }
