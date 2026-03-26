@@ -90,7 +90,7 @@ export class MenuAPI {
           name: item.name,
           displayPrice: item.displayPrice ?? "",
           description: item.description ?? "",
-          imgUrl: item.imgUrl ?? "",
+          imgUrl: item.imageUrl ?? "",
           quickAddEligible: !!item.quickAddContext?.isEligible,
           quickAddPrice: item.quickAddContext?.price?.unitAmount ?? 0,
           quickAddNestedOptions: item.quickAddContext?.nestedOptions ?? "[]",
@@ -109,7 +109,12 @@ export class MenuAPI {
       deliveryMinutes: header.asapMinutes ?? 0,
       priceRange: header.priceRangeDisplayString ?? "",
       menuId: String(feed.menuBook?.id ?? ""),
-      address: header.address?.printableAddress ?? "",
+      address: header.address
+        ? `${header.address.street}, ${header.address.city}, ${header.address.state}`.replace(
+            /, $/,
+            "",
+          )
+        : "",
       coverImgUrl: header.coverImgUrl ?? "",
       categories,
     };

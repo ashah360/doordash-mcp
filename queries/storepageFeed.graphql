@@ -12,8 +12,9 @@ query storepageFeed($storeId: ID!, $isMerchantPreview: Boolean) {
         numRatingsDisplayString
       }
       address {
-        printableAddress
         street
+        city
+        state
         lat
         lng
       }
@@ -32,7 +33,7 @@ query storepageFeed($storeId: ID!, $isMerchantPreview: Boolean) {
         name
         description
         displayPrice
-        imgUrl
+        imageUrl
         quickAddContext {
           isEligible
           price {
