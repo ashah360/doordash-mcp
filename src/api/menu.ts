@@ -110,16 +110,20 @@ export class MenuAPI {
     query: string,
   ): Promise<ConvenienceItem[]> {
     const q = this.gql.loadQuery("convenienceSearchQuery.graphql");
-    const data = await this.gql.query<any>("convenienceSearchQuery", {
-      input: {
-        query,
-        storeId,
-        disableSpellCheck: false,
-        limit: 15,
-        origin: "RETAIL_SEARCH",
-        filterQuery: "",
+    const data = await this.gql.query<any>(
+      "convenienceSearchQuery",
+      {
+        input: {
+          query,
+          storeId,
+          disableSpellCheck: false,
+          limit: 15,
+          origin: "RETAIL_SEARCH",
+          filterQuery: "",
+        },
       },
-    }, q);
+      q,
+    );
 
     const legoItems = data?.retailSearch?.legoRetailItems ?? [];
     return legoItems.map((item: any) => {
@@ -127,10 +131,8 @@ export class MenuAPI {
       const labels =
         custom.accessibility_information?.accessibility_labels ?? [];
       return {
-        name:
-          labels.find((l: any) => l.label === "item_name")?.value ?? "?",
-        price:
-          labels.find((l: any) => l.label === "item_price")?.value ?? "?",
+        name: labels.find((l: any) => l.label === "item_name")?.value ?? "?",
+        price: labels.find((l: any) => l.label === "item_price")?.value ?? "?",
         subtext:
           labels.find((l: any) => l.label === "item_subtext")?.value ?? "",
         id: item.id?.match(/:(\d+)$/)?.[1] ?? item.id,
@@ -138,18 +140,19 @@ export class MenuAPI {
     });
   }
 
-  async getItemOptions(
-    storeId: string,
-    itemId: string,
-  ): Promise<ItemDetails> {
+  async getItemOptions(storeId: string, itemId: string): Promise<ItemDetails> {
     const q = this.gql.loadQuery("itemPage.graphql");
-    const data = await this.gql.query<any>("itemPage", {
-      storeId,
-      itemId,
-      isMerchantPreview: false,
-      isNested: false,
-      fulfillmentType: "Delivery",
-    }, q);
+    const data = await this.gql.query<any>(
+      "itemPage",
+      {
+        storeId,
+        itemId,
+        isMerchantPreview: false,
+        isNested: false,
+        fulfillmentType: "Delivery",
+      },
+      q,
+    );
 
     const page = data?.itemPage;
     if (!page) throw new Error("Could not load item details.");
@@ -181,7 +184,12 @@ function parseOptionGroup(group: any): ItemOptionGroup {
       name: opt.name,
       price: opt.unitAmount ?? 0,
       displayPrice: opt.displayString ?? "",
-      subGroups: (opt.nestedExtrasList ?? opt.optionTagsList ?? opt.optionLists ?? []).map((sg: any) => parseOptionGroup(sg)),
+      subGroups: (
+        opt.nestedExtrasList ??
+        opt.optionTagsList ??
+        opt.optionLists ??
+        []
+      ).map((sg: any) => parseOptionGroup(sg)),
     })),
   };
 }

@@ -6,6 +6,12 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { CookieJar } from "./cookies.js";
 
+export interface SessionContext {
+  readonly cookieJar: CookieJar;
+  isAuthenticated(): boolean;
+  getCsrfToken(): string;
+}
+
 export interface DoorDashConfig {
   email: string;
   password: string;
@@ -22,7 +28,8 @@ export class DoorDashSession {
   private state: Record<string, unknown> = {};
 
   constructor(configDir?: string) {
-    this.configDir = configDir ?? join(process.env.HOME ?? "~", ".doordash-mcp");
+    this.configDir =
+      configDir ?? join(process.env.HOME ?? "~", ".doordash-mcp");
     this.cookieJar = new CookieJar();
     mkdirSync(this.configDir, { recursive: true });
   }

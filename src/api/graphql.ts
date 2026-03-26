@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { HttpClient } from "../client/http.js";
-import type { DoorDashSession } from "../client/session.js";
+import type { SessionContext } from "../client/session.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const QUERIES_DIR = join(__dirname, "..", "..", "queries");
@@ -25,19 +25,15 @@ export class GraphQLError extends Error {
 
 export class AuthError extends Error {
   constructor() {
-    super(
-      "Not logged into DoorDash. Run the doordash_login tool first.",
-    );
+    super("Not logged into DoorDash. Run the doordash_login tool first.");
     this.name = "AuthError";
   }
 }
 
 export class GraphQLClient {
-  private queryCache = new Map<string, string>();
-
   constructor(
     private http: HttpClient,
-    private session: DoorDashSession,
+    private session: SessionContext,
   ) {}
 
   /** Execute a GraphQL operation against DoorDash's API. */
@@ -70,6 +66,7 @@ export class GraphQLClient {
             "@doordash/app-consumer-production-ssr-client",
           "apollographql-client-version": "3.0",
         },
+        cookieJar: this.session.cookieJar,
       },
     );
 

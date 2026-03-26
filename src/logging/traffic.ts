@@ -48,10 +48,7 @@ export class TrafficLogger {
   private counter = 0;
 
   constructor(baseDir: string) {
-    const ts = new Date()
-      .toISOString()
-      .replace(/[:.]/g, "-")
-      .slice(0, 19);
+    const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     this.sessionDir = join(baseDir, ts);
     mkdirSync(this.sessionDir, { recursive: true });
   }

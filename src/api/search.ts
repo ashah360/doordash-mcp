@@ -12,7 +12,11 @@ export class SearchAPI {
 
   async searchStores(query: string): Promise<StoreResult[]> {
     const q = this.gql.loadQuery("autocompleteFacetFeed.graphql");
-    const data = await this.gql.query<any>("autocompleteFacetFeed", { query }, q);
+    const data = await this.gql.query<any>(
+      "autocompleteFacetFeed",
+      { query },
+      q,
+    );
 
     const items = data?.autocompleteFacetFeed?.body?.[0]?.body ?? [];
     return items

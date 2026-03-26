@@ -184,9 +184,7 @@ export class CookieJar {
   }
 
   /** Normalize the Set-Cookie header into an array of individual cookie strings. */
-  private normalizeSetCookieHeader(
-    raw: string | string[] | unknown,
-  ): string[] {
+  private normalizeSetCookieHeader(raw: string | string[] | unknown): string[] {
     if (Array.isArray(raw)) {
       return raw.flatMap((s) => {
         if (typeof s !== "string") return [];

@@ -27,6 +27,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   body?: unknown;
   disableRedirect?: boolean;
+  cookieJar?: CookieJar;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,7 +52,8 @@ export class HttpClient {
     if (!this.tls) throw new Error("HttpClient not initialized. Call init().");
 
     const method = (opts.method ?? "GET").toLowerCase();
-    const cookieHeader = this.jar.getCookiesFor(url);
+    const jar = opts.cookieJar ?? this.jar;
+    const cookieHeader = jar.getCookiesFor(url);
 
     const headers: Record<string, string> = {
       "Accept-Language": "en-US,en;q=0.9",
@@ -85,8 +87,7 @@ export class HttpClient {
     const resp = await (this.tls as any)(url, requestOpts, method);
     const duration = Date.now() - start;
 
-    // Store cookies from response
-    this.jar.storeCookies(url, resp.headers ?? {});
+    jar.storeCookies(url, resp.headers ?? {});
 
     let body: unknown = resp.body ?? resp.data ?? "";
     if (Buffer.isBuffer(body)) body = (body as Buffer).toString("utf-8");

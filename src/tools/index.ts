@@ -1,5 +1,5 @@
 /**
- * All 21 DoorDash MCP tool registrations.
+ * All 23 DoorDash MCP tool registrations.
  * Thin wrappers: parse MCP input → call API → format markdown output.
  */
 
@@ -14,8 +14,12 @@ import type { AccountAPI } from "../api/account.js";
 import type { OrdersAPI } from "../api/orders.js";
 import type { GroupAPI } from "../api/group.js";
 import type { LoginFlow } from "../auth/login.js";
+import type { GuestSessionStore } from "../client/guest.js";
 
-type ToolResult = { content: { type: "text"; text: string }[]; isError?: boolean };
+type ToolResult = {
+  content: { type: "text"; text: string }[];
+  isError?: boolean;
+};
 
 function ok(text: string): ToolResult {
   return { content: [{ type: "text", text }] };
@@ -55,7 +59,11 @@ function buildNestedOption(o: any): any {
 }
 
 /** Format an option group (and its nested sub-groups) as markdown. */
-function formatOptionGroup(lines: string[], group: any, headingLevel: number): void {
+function formatOptionGroup(
+  lines: string[],
+  group: any,
+  headingLevel: number,
+): void {
   const hashes = "#".repeat(headingLevel);
   let constraint = group.required ? " **(required)**" : " (optional)";
   if (group.minOptions > 0 || group.maxOptions > 0) {
@@ -82,6 +90,7 @@ export interface APIs {
   account: AccountAPI;
   orders: OrdersAPI;
   group: GroupAPI;
+  guests: GuestSessionStore;
 }
 
 export function registerTools(server: McpServer, api: APIs): void {
@@ -130,15 +139,19 @@ export function registerTools(server: McpServer, api: APIs): void {
   server.registerTool(
     "doordash_search",
     {
-      description: "Search for restaurants on DoorDash by name, cuisine, or food type",
+      description:
+        "Search for restaurants on DoorDash by name, cuisine, or food type",
       inputSchema: {
-        query: z.string().describe("Search query (e.g. 'pizza', 'thai food', 'McDonalds')"),
+        query: z
+          .string()
+          .describe("Search query (e.g. 'pizza', 'thai food', 'McDonalds')"),
       },
     },
     ({ query }) =>
       wrap(async () => {
         const stores = await api.search.searchStores(query);
-        if (stores.length === 0) return ok(`No restaurants found for "${query}".`);
+        if (stores.length === 0)
+          return ok(`No restaurants found for "${query}".`);
 
         const text = stores
           .map(
@@ -155,7 +168,8 @@ export function registerTools(server: McpServer, api: APIs): void {
   server.registerTool(
     "doordash_menu",
     {
-      description: "Get a restaurant's menu by store ID. Use doordash_search first to find the store ID.",
+      description:
+        "Get a restaurant's menu by store ID. Use doordash_search first to find the store ID.",
       inputSchema: {
         store_id: z.string().describe("DoorDash store ID (numeric)"),
       },
@@ -169,13 +183,16 @@ export function registerTools(server: McpServer, api: APIs): void {
         if (menu.isConvenience) lines.push("**Type: Convenience store**");
         lines.push("");
         if (menu.rating) lines.push(`Rating: ${menu.rating}`);
-        if (menu.deliveryMinutes) lines.push(`Delivery: ~${menu.deliveryMinutes} min`);
+        if (menu.deliveryMinutes)
+          lines.push(`Delivery: ~${menu.deliveryMinutes} min`);
         if (menu.priceRange) lines.push(`Price: ${menu.priceRange}`);
         lines.push("");
 
         if (menu.isConvenience) {
           lines.push("This is a convenience store with a large catalog.");
-          lines.push("Use `doordash_convenience_search` with this store ID to find specific items.");
+          lines.push(
+            "Use `doordash_convenience_search` with this store ID to find specific items.",
+          );
           return ok(lines.join("\n"));
         }
 
@@ -208,19 +225,26 @@ export function registerTools(server: McpServer, api: APIs): void {
         "Search for items within a convenience store (grocery, alcohol, pharmacy, etc.).",
       inputSchema: {
         store_id: z.string().describe("DoorDash store ID"),
-        query: z.string().describe("Search query (e.g. 'chicken breast', 'la croix')"),
+        query: z
+          .string()
+          .describe("Search query (e.g. 'chicken breast', 'la croix')"),
       },
     },
     ({ store_id, query }) =>
       wrap(async () => {
         const items = await api.menu.searchConvenience(store_id, query);
-        if (items.length === 0) return err(`No items found for "${query}" at this store.`);
+        if (items.length === 0)
+          return err(`No items found for "${query}" at this store.`);
 
         const lines = [`Search results for "${query}":\n`];
         for (const item of items) {
-          lines.push(`- **${item.name}** ${item.price} (${item.subtext}) [ID: ${item.id}]`);
+          lines.push(
+            `- **${item.name}** ${item.price} (${item.subtext}) [ID: ${item.id}]`,
+          );
         }
-        lines.push("\n*Use doordash_add_to_cart with store_id and item_id to add items.*");
+        lines.push(
+          "\n*Use doordash_add_to_cart with store_id and item_id to add items.*",
+        );
         return ok(lines.join("\n"));
       }),
   );
@@ -228,7 +252,8 @@ export function registerTools(server: McpServer, api: APIs): void {
   server.registerTool(
     "doordash_item_options",
     {
-      description: "Get customization options for a menu item (sides, extras, modifications).",
+      description:
+        "Get customization options for a menu item (sides, extras, modifications).",
       inputSchema: {
         store_id: z.string().describe("DoorDash store ID"),
         item_id: z.string().describe("Item ID from doordash_menu"),
@@ -240,11 +265,14 @@ export function registerTools(server: McpServer, api: APIs): void {
         const lines: string[] = [];
         lines.push(`# ${details.name}`);
         if (details.description) lines.push(`*${details.description}*`);
-        if (details.unitAmount) lines.push(`Base price: $${(details.unitAmount / 100).toFixed(2)}`);
+        if (details.unitAmount)
+          lines.push(`Base price: $${(details.unitAmount / 100).toFixed(2)}`);
         lines.push("");
 
         if (details.optionGroups.length === 0) {
-          lines.push("No customization options. This item can be added directly.");
+          lines.push(
+            "No customization options. This item can be added directly.",
+          );
         }
 
         for (const group of details.optionGroups) {
@@ -267,16 +295,58 @@ export function registerTools(server: McpServer, api: APIs): void {
         "Add an item to your DoorDash cart. For restaurants, pass item_name. For convenience stores, pass item_id directly.",
       inputSchema: {
         store_id: z.string().describe("DoorDash store ID"),
-        item_name: z.string().describe("Item name (used for restaurant menu lookup)"),
-        item_id: z.string().optional().describe("Item ID for convenience store items"),
-        quantity: z.number().optional().default(1).describe("Quantity (default 1)"),
-        options: z.string().optional().describe('JSON array of selected options. Flat: [{"id":"123","name":"Chicken"}]. Nested (for items like burritos where toppings go inside the filling): [{"id":"123","name":"Chicken","children":[{"id":"456","name":"Brown Rice"},{"id":"789","name":"Sour Cream"}]}]'),
-        unit_price: z.number().optional().describe("Price in cents (for convenience store items)"),
+        item_name: z
+          .string()
+          .describe("Item name (used for restaurant menu lookup)"),
+        item_id: z
+          .string()
+          .optional()
+          .describe("Item ID for convenience store items"),
+        quantity: z
+          .number()
+          .optional()
+          .default(1)
+          .describe("Quantity (default 1)"),
+        options: z
+          .string()
+          .optional()
+          .describe(
+            'JSON array of selected options. Flat: [{"id":"123","name":"Chicken"}]. Nested (for items like burritos where toppings go inside the filling): [{"id":"123","name":"Chicken","children":[{"id":"456","name":"Brown Rice"},{"id":"789","name":"Sour Cream"}]}]',
+          ),
+        unit_price: z
+          .number()
+          .optional()
+          .describe("Price in cents (for convenience store items)"),
         cart_id: z.string().optional().describe("Cart ID to add to"),
+        external_user_id: z
+          .string()
+          .optional()
+          .describe(
+            "External user ID for group order guest session (e.g. Slack user ID). Must call doordash_join_group_order first.",
+          ),
       },
     },
-    ({ store_id, item_name, item_id, quantity, options, unit_price, cart_id }) =>
+    ({
+      store_id,
+      item_name,
+      item_id,
+      quantity,
+      options,
+      unit_price,
+      cart_id,
+      external_user_id,
+    }) =>
       wrap(async () => {
+        const guest =
+          external_user_id && cart_id
+            ? api.guests.getSession(cart_id, external_user_id)
+            : undefined;
+        if (external_user_id && !guest) {
+          return err(
+            `No guest session for user "${external_user_id}" on cart ${cart_id}. Call doordash_join_group_order first.`,
+          );
+        }
+        const cartApi = guest?.cart ?? api.cart;
         let resolvedId = item_id ?? "";
         let resolvedName = item_name;
         let resolvedPrice = unit_price ?? 0;
@@ -315,7 +385,9 @@ export function registerTools(server: McpServer, api: APIs): void {
             const names = menu.categories
               .flatMap((c) => c.items.map((i) => i.name))
               .slice(0, 10);
-            return err(`Item "${item_name}" not found. Try: ${names.join(", ")}`);
+            return err(
+              `Item "${item_name}" not found. Try: ${names.join(", ")}`,
+            );
           }
 
           resolvedId = found.id;
@@ -331,7 +403,7 @@ export function registerTools(server: McpServer, api: APIs): void {
           );
         }
 
-        const result = await api.cart.addToCart({
+        const result = await cartApi.addToCart({
           storeId: store_id,
           itemId: resolvedId,
           itemName: resolvedName,
@@ -340,6 +412,7 @@ export function registerTools(server: McpServer, api: APIs): void {
           nestedOptions: nestedOpts,
           unitPrice: resolvedPrice,
           cartId: cart_id,
+          isGroupGuest: !!guest,
         });
 
         const subtotal = `$${(result.subtotal / 100).toFixed(2)}`;
@@ -368,9 +441,12 @@ export function registerTools(server: McpServer, api: APIs): void {
           lines.push(`Cart ID: ${cart.id}`);
           for (const item of cart.items) {
             const price = item.price ? `$${(item.price / 100).toFixed(2)}` : "";
-            lines.push(`- ${item.quantity}x **${item.name}** ${price} (item ID: ${item.id})`);
+            lines.push(
+              `- ${item.quantity}x **${item.name}** ${price} (item ID: ${item.id})`,
+            );
           }
-          if (cart.subtotal) lines.push(`\nSubtotal: $${(cart.subtotal / 100).toFixed(2)}`);
+          if (cart.subtotal)
+            lines.push(`\nSubtotal: $${(cart.subtotal / 100).toFixed(2)}`);
           lines.push("");
         }
         return ok(lines.join("\n"));
@@ -384,22 +460,41 @@ export function registerTools(server: McpServer, api: APIs): void {
       inputSchema: {
         cart_id: z.string().describe("Cart ID"),
         item_id: z.string().describe("Item ID from doordash_cart"),
-        action: z.enum(["update_quantity", "remove"]).describe("Action to perform"),
-        quantity: z.number().optional().describe("New quantity (for update_quantity)"),
-        store_id: z.string().optional().describe("Store ID (auto-detected if not specified)"),
+        action: z
+          .enum(["update_quantity", "remove"])
+          .describe("Action to perform"),
+        quantity: z
+          .number()
+          .optional()
+          .describe("New quantity (for update_quantity)"),
+        store_id: z
+          .string()
+          .optional()
+          .describe("Store ID (auto-detected if not specified)"),
+        external_user_id: z
+          .string()
+          .optional()
+          .describe("External user ID for group order guest session"),
       },
     },
-    ({ cart_id, item_id, action, quantity, store_id }) =>
+    ({ cart_id, item_id, action, quantity, store_id, external_user_id }) =>
       wrap(async () => {
+        const guest = external_user_id
+          ? api.guests.getSession(cart_id, external_user_id)
+          : undefined;
+        const cartApi = guest?.cart ?? api.cart;
+
         if (action === "remove") {
-          await api.cart.removeItem(cart_id, item_id);
+          await cartApi.removeItem(cart_id, item_id);
           const carts = await api.cart.listCarts();
-          const remaining = carts.find((c) => c.id === cart_id)?.items.length ?? 0;
+          const remaining =
+            carts.find((c) => c.id === cart_id)?.items.length ?? 0;
           return ok(`Item removed. ${remaining} items remaining in cart.`);
         }
 
         if (action === "update_quantity") {
-          if (!quantity || quantity < 1) return err("Quantity must be at least 1.");
+          if (!quantity || quantity < 1)
+            return err("Quantity must be at least 1.");
 
           const carts = await api.cart.listCarts();
           const targetCart = carts.find((c) => c.id === cart_id);
@@ -468,9 +563,13 @@ export function registerTools(server: McpServer, api: APIs): void {
   server.registerTool(
     "doordash_checkout",
     {
-      description: "Preview checkout details (fees, total). Does NOT place the order.",
+      description:
+        "Preview checkout details (fees, total). Does NOT place the order.",
       inputSchema: {
-        cart_id: z.string().optional().describe("Cart ID. Uses most recent if not specified."),
+        cart_id: z
+          .string()
+          .optional()
+          .describe("Cart ID. Uses most recent if not specified."),
       },
     },
     ({ cart_id }) =>
@@ -492,7 +591,9 @@ export function registerTools(server: McpServer, api: APIs): void {
         }
         if (summary.total) lines.push(`\n**Total: ${summary.total}**`);
         lines.push(`\nCart ID: ${cartId}`);
-        lines.push("\n*Call doordash_place_order with this cart ID to place the order.*");
+        lines.push(
+          "\n*Call doordash_place_order with this cart ID to place the order.*",
+        );
         return ok(lines.join("\n"));
       }),
   );
@@ -503,7 +604,11 @@ export function registerTools(server: McpServer, api: APIs): void {
       description: "Place a DoorDash order. THIS WILL CHARGE YOUR CARD.",
       inputSchema: {
         cart_id: z.string().describe("Cart ID from doordash_checkout"),
-        tip_cents: z.number().optional().default(0).describe("Tip in cents (default 0)"),
+        tip_cents: z
+          .number()
+          .optional()
+          .default(0)
+          .describe("Tip in cents (default 0)"),
         payment_card_id: z.string().optional().describe("Payment card ID"),
         store_id: z.string().optional().describe("Store ID (auto-detected)"),
       },
@@ -512,7 +617,8 @@ export function registerTools(server: McpServer, api: APIs): void {
       wrap(async () => {
         // Get fee tally for total
         const summary = await api.checkout.getFeeTally(cart_id);
-        if (summary.totalCents === 0) return err("Could not determine order total.");
+        if (summary.totalCents === 0)
+          return err("Could not determine order total.");
 
         // Resolve store ID
         let sid = store_id ?? "";
@@ -535,7 +641,9 @@ export function registerTools(server: McpServer, api: APIs): void {
           );
         }
         if (result.paymentStatus === "failed") {
-          return err(`Order submitted but payment failed: ${result.errorMessage}`);
+          return err(
+            `Order submitted but payment failed: ${result.errorMessage}`,
+          );
         }
         return ok(
           `Order submitted. Order ID: ${result.orderUuid}\nPayment processing. Use doordash_order_status to check.`,
@@ -567,7 +675,11 @@ export function registerTools(server: McpServer, api: APIs): void {
     {
       description: "Get recent DoorDash order history",
       inputSchema: {
-        limit: z.number().optional().default(5).describe("Number of orders (default 5)"),
+        limit: z
+          .number()
+          .optional()
+          .default(5)
+          .describe("Number of orders (default 5)"),
       },
     },
     ({ limit }) =>
@@ -645,7 +757,9 @@ export function registerTools(server: McpServer, api: APIs): void {
 
         const lines = ["# Delivery Addresses\n"];
         for (const a of addrs) {
-          lines.push(`- ${a.street}, ${a.city}, ${a.state} ${a.zipCode} (ID: ${a.id})`);
+          lines.push(
+            `- ${a.street}, ${a.city}, ${a.state} ${a.zipCode} (ID: ${a.id})`,
+          );
         }
         return ok(lines.join("\n"));
       }),
@@ -672,10 +786,19 @@ export function registerTools(server: McpServer, api: APIs): void {
         const dupe = existing.find(
           (a) => a.street === street && a.city === city && a.state === state,
         );
-        if (dupe) return ok(`Address "${street}, ${city}" already exists (ID: ${dupe.id}).`);
+        if (dupe)
+          return ok(
+            `Address "${street}, ${city}" already exists (ID: ${dupe.id}).`,
+          );
 
         await api.account.addAddress({
-          street, city, state, zipCode: zip_code, lat, lng, googlePlaceId: google_place_id,
+          street,
+          city,
+          state,
+          zipCode: zip_code,
+          lat,
+          lng,
+          googlePlaceId: google_place_id,
         });
         return ok(`Added address: ${street}, ${city}, ${state} ${zip_code}`);
       }),
@@ -704,7 +827,8 @@ export function registerTools(server: McpServer, api: APIs): void {
   server.registerTool(
     "doordash_create_group_order",
     {
-      description: "Create a group order at a restaurant. Returns a share link.",
+      description:
+        "Create a group order at a restaurant. Returns a share link.",
       inputSchema: {
         store_id: z.string().describe("DoorDash store ID"),
       },
@@ -753,12 +877,76 @@ export function registerTools(server: McpServer, api: APIs): void {
           lines.push(`## ${member.name} (${status})`);
           for (const item of member.items) {
             const price = item.price ? `$${(item.price / 100).toFixed(2)}` : "";
-            lines.push(`- ${item.quantity}x ${item.name} ${price} (item ID: ${item.id})`);
+            lines.push(
+              `- ${item.quantity}x ${item.name} ${price} (item ID: ${item.id})`,
+            );
           }
           lines.push("");
         }
 
         return ok(lines.join("\n"));
+      }),
+  );
+
+  server.registerTool(
+    "doordash_join_group_order",
+    {
+      description:
+        "Join a group order as a guest on behalf of another user. Creates a guest session that can be used with doordash_add_to_cart.",
+      inputSchema: {
+        cart_id: z.string().describe("Group cart ID"),
+        store_id: z.string().describe("Store ID for the group order"),
+        first_name: z
+          .string()
+          .describe("Guest's first name (shown on order labels)"),
+        last_name: z.string().describe("Guest's last name"),
+        external_user_id: z
+          .string()
+          .describe(
+            "External user ID to associate with this guest session (e.g. Slack user ID)",
+          ),
+      },
+    },
+    ({ cart_id, store_id, first_name, last_name, external_user_id }) =>
+      wrap(async () => {
+        const session = await api.guests.joinGroupOrder({
+          cartId: cart_id,
+          storeId: store_id,
+          externalUserId: external_user_id,
+          firstName: first_name,
+          lastName: last_name,
+        });
+        return ok(
+          `**${session.firstName} ${session.lastName}** joined the group order.\n` +
+            `External user ID: ${external_user_id}\n\n` +
+            `Use doordash_add_to_cart with \`external_user_id: "${external_user_id}"\` and \`cart_id: "${cart_id}"\` to add items on their behalf.`,
+        );
+      }),
+  );
+
+  server.registerTool(
+    "doordash_finalize_guest_order",
+    {
+      description: "Mark a guest as done adding items to a group order.",
+      inputSchema: {
+        cart_id: z.string().describe("Group cart ID"),
+        external_user_id: z
+          .string()
+          .describe("External user ID of the guest to finalize"),
+      },
+    },
+    ({ cart_id, external_user_id }) =>
+      wrap(async () => {
+        const session = api.guests.getSession(cart_id, external_user_id);
+        if (!session) {
+          return err(
+            `No guest session for user "${external_user_id}" on cart ${cart_id}.`,
+          );
+        }
+        await api.guests.finalizeGuestOrder(cart_id, external_user_id);
+        return ok(
+          `**${session.firstName} ${session.lastName}** is done adding items.`,
+        );
       }),
   );
 }

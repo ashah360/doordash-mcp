@@ -69,31 +69,35 @@ export class CheckoutAPI {
     const tipCents = params.tipCents ?? 0;
     const isCardPayment = !!params.paymentCardId;
 
-    const data = await this.gql.query<any>("createOrderFromCart", {
-      cartId: params.cartId,
-      total: params.totalCents + tipCents,
-      sosDeliveryFee: 0,
-      storeId: params.storeId,
-      isPickupOrder: false,
-      verifiedAgeRequirement: false,
-      deliveryTime: "ASAP",
-      deliveryOptionType: "NOT_SET",
-      tipAmounts: [{ tipRecipient: "DASHER", amount: tipCents }],
-      paymentMethod: params.paymentCardId
-        ? parseInt(params.paymentCardId)
-        : null,
-      isCardPayment,
-      membershipId: "",
-      programId: "",
-      attributionData: "{}",
-      fulfillsOwnDeliveries: false,
-      menuOptions: null,
-      teamId: null,
-      budgetId: null,
-      giftOptions: null,
-      recipientShippingDetails: null,
-      workOrderOptions: null,
-    }, q);
+    const data = await this.gql.query<any>(
+      "createOrderFromCart",
+      {
+        cartId: params.cartId,
+        total: params.totalCents + tipCents,
+        sosDeliveryFee: 0,
+        storeId: params.storeId,
+        isPickupOrder: false,
+        verifiedAgeRequirement: false,
+        deliveryTime: "ASAP",
+        deliveryOptionType: "NOT_SET",
+        tipAmounts: [{ tipRecipient: "DASHER", amount: tipCents }],
+        paymentMethod: params.paymentCardId
+          ? parseInt(params.paymentCardId)
+          : null,
+        isCardPayment,
+        membershipId: "",
+        programId: "",
+        attributionData: "{}",
+        fulfillsOwnDeliveries: false,
+        menuOptions: null,
+        teamId: null,
+        budgetId: null,
+        giftOptions: null,
+        recipientShippingDetails: null,
+        workOrderOptions: null,
+      },
+      q,
+    );
 
     const order = data?.createOrderFromCart;
     if (!order?.orderUuid) {

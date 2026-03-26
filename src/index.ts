@@ -27,6 +27,7 @@ import { CheckoutAPI } from "./api/checkout.js";
 import { AccountAPI } from "./api/account.js";
 import { OrdersAPI } from "./api/orders.js";
 import { GroupAPI } from "./api/group.js";
+import { GuestSessionStore } from "./client/guest.js";
 import { registerTools, type APIs } from "./tools/index.js";
 
 const log = (msg: string) => process.stderr.write(`[dd-mcp] ${msg}\n`);
@@ -46,6 +47,8 @@ async function createClient(configDir?: string) {
   const gql = new GraphQLClient(http, session);
   const loginFlow = new LoginFlow(http, session);
 
+  const guestStore = new GuestSessionStore(http);
+
   const apis: APIs = {
     login: loginFlow,
     search: new SearchAPI(gql),
@@ -55,6 +58,7 @@ async function createClient(configDir?: string) {
     account: new AccountAPI(gql, http),
     orders: new OrdersAPI(gql),
     group: new GroupAPI(gql),
+    guests: guestStore,
   };
 
   return { session, http, apis };
@@ -82,7 +86,9 @@ async function cleanup() {
 
 process.on("SIGTERM", () => cleanup().finally(() => process.exit(0)));
 process.on("SIGINT", () => cleanup().finally(() => process.exit(0)));
-process.on("beforeExit", () => { cleanup(); });
+process.on("beforeExit", () => {
+  cleanup();
+});
 
 // ── Main ─────────────────────────────────────────────────
 

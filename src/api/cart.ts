@@ -32,15 +32,25 @@ export class CartAPI {
   async listCarts(storeId?: string): Promise<Cart[]> {
     const q = this.gql.loadQuery("listCarts.graphql");
     const context = storeId
-      ? { experienceCase: "MULTI_CART_EXPERIENCE_CONTEXT", multiCartExperienceContext: { storeId } }
-      : { experienceCase: "MULTI_CART_EXPERIENCE_CONTEXT", multiCartExperienceContext: {} };
+      ? {
+          experienceCase: "MULTI_CART_EXPERIENCE_CONTEXT",
+          multiCartExperienceContext: { storeId },
+        }
+      : {
+          experienceCase: "MULTI_CART_EXPERIENCE_CONTEXT",
+          multiCartExperienceContext: {},
+        };
 
-    const data = await this.gql.query<any>("listCarts", {
-      input: {
-        cartContextFilter: context,
-        cartFilter: { shouldIncludeSubmitted: true },
+    const data = await this.gql.query<any>(
+      "listCarts",
+      {
+        input: {
+          cartContextFilter: context,
+          cartFilter: { shouldIncludeSubmitted: true },
+        },
       },
-    }, q);
+      q,
+    );
 
     return (data?.listCarts ?? []).map((cart: any) => ({
       id: cart.id,
@@ -71,43 +81,48 @@ export class CartAPI {
     unitPrice?: number;
     cartId?: string;
     specialInstructions?: string;
+    isGroupGuest?: boolean;
   }): Promise<AddToCartResult> {
     const q = this.gql.loadQuery("addCartItem.graphql");
+    const isGroup = params.isGroupGuest ?? false;
 
-    // Auto-discover cart if not provided
     let cartId = params.cartId ?? "";
     if (!cartId) {
       const carts = await this.listCarts(params.storeId);
       cartId = carts[0]?.id ?? "";
     }
 
-    const data = await this.gql.query<any>("addCartItem", {
-      addCartItemInput: {
-        storeId: params.storeId,
-        menuId: params.menuId ?? "",
-        itemId: params.itemId,
-        itemName: params.itemName,
-        itemDescription: "",
-        currency: "USD",
-        quantity: params.quantity ?? 1,
-        nestedOptions: params.nestedOptions ?? "[]",
-        specialInstructions: params.specialInstructions ?? "",
-        substitutionPreference: "contact",
-        unitPrice: params.unitPrice ?? 0,
-        cartId,
-        isBundle: false,
-        bundleType: null,
+    const data = await this.gql.query<any>(
+      "addCartItem",
+      {
+        addCartItemInput: {
+          storeId: params.storeId,
+          menuId: params.menuId ?? "",
+          itemId: params.itemId,
+          itemName: params.itemName,
+          itemDescription: "",
+          currency: "USD",
+          quantity: params.quantity ?? 1,
+          nestedOptions: params.nestedOptions ?? "[]",
+          specialInstructions: params.specialInstructions ?? "",
+          substitutionPreference: isGroup ? "substitute" : "contact",
+          unitPrice: params.unitPrice ?? 0,
+          cartId,
+          isBundle: false,
+          bundleType: isGroup ? "BUNDLE_TYPE_UNSPECIFIED" : null,
+        },
+        fulfillmentContext: {
+          shouldUpdateFulfillment: false,
+          fulfillmentType: "Delivery",
+        },
+        monitoringContext: { isGroup },
+        cartContext: { isBundle: false },
+        returnCartFromOrderService: isGroup,
+        shouldKeepOnlyOneActiveCart: false,
+        lowPriorityBatchAddCartItemInput: [],
       },
-      fulfillmentContext: {
-        shouldUpdateFulfillment: false,
-        fulfillmentType: "Delivery",
-      },
-      monitoringContext: { isGroup: false },
-      cartContext: { isBundle: false },
-      returnCartFromOrderService: false,
-      shouldKeepOnlyOneActiveCart: false,
-      lowPriorityBatchAddCartItemInput: [],
-    }, q);
+      q,
+    );
 
     const cart = data?.addCartItemV2;
     if (!cart) throw new Error("Could not add item. It may require options.");
