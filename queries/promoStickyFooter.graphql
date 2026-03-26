@@ -1,4 +1,16 @@
-query promoStickyFooter($consumerId: ID!, $cartId: ID, $storeId: ID, $submarketId: ID, $menuId: ID, $subtotal: Int, $currency: String, $isDYFCart: Boolean, $cartStatusType: CartStatusType, $landingPageType: PromoLandingPageTypeMap, $micStickyFooterState: MICStickyFooterState) {
+query promoStickyFooter(
+  $consumerId: ID!
+  $cartId: ID
+  $storeId: ID
+  $submarketId: ID
+  $menuId: ID
+  $subtotal: Int
+  $currency: String
+  $isDYFCart: Boolean
+  $cartStatusType: CartStatusType
+  $landingPageType: PromoLandingPageTypeMap
+  $micStickyFooterState: MICStickyFooterState
+) {
   promoStickyFooter(
     consumerId: $consumerId
     cartId: $cartId

@@ -11,6 +11,15 @@ query storepageFeed($storeId: ID!, $isMerchantPreview: Boolean) {
         averageRating
         numRatingsDisplayString
       }
+      address {
+        printableAddress
+        street
+        lat
+        lng
+      }
+      coverImgUrl
+      offersDelivery
+      offersPickup
     }
     menuBook {
       id
@@ -23,6 +32,7 @@ query storepageFeed($storeId: ID!, $isMerchantPreview: Boolean) {
         name
         description
         displayPrice
+        imgUrl
         quickAddContext {
           isEligible
           price {

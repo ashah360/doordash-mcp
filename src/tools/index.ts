@@ -1,5 +1,5 @@
 /**
- * All 23 DoorDash MCP tool registrations.
+ * All 22 DoorDash MCP tool registrations.
  * Thin wrappers: parse MCP input → call API → format markdown output.
  */
 
@@ -186,6 +186,7 @@ export function registerTools(server: McpServer, api: APIs): void {
         if (menu.deliveryMinutes)
           lines.push(`Delivery: ~${menu.deliveryMinutes} min`);
         if (menu.priceRange) lines.push(`Price: ${menu.priceRange}`);
+        if (menu.address) lines.push(`Address: ${menu.address}`);
         lines.push("");
 
         if (menu.isConvenience) {
@@ -267,6 +268,11 @@ export function registerTools(server: McpServer, api: APIs): void {
         if (details.description) lines.push(`*${details.description}*`);
         if (details.unitAmount)
           lines.push(`Base price: $${(details.unitAmount / 100).toFixed(2)}`);
+        if (details.calories) lines.push(`Calories: ${details.calories}`);
+        if (details.dietaryTags.length > 0)
+          lines.push(`Dietary: ${details.dietaryTags.join(", ")}`);
+        if (details.quantityLimit > 0)
+          lines.push(`Max quantity: ${details.quantityLimit}`);
         lines.push("");
 
         if (details.optionGroups.length === 0) {
@@ -923,29 +929,9 @@ export function registerTools(server: McpServer, api: APIs): void {
       }),
   );
 
-  server.registerTool(
-    "doordash_finalize_guest_order",
-    {
-      description: "Mark a guest as done adding items to a group order.",
-      inputSchema: {
-        cart_id: z.string().describe("Group cart ID"),
-        external_user_id: z
-          .string()
-          .describe("External user ID of the guest to finalize"),
-      },
-    },
-    ({ cart_id, external_user_id }) =>
-      wrap(async () => {
-        const session = api.guests.getSession(external_user_id);
-        if (!session) {
-          return err(
-            `No guest session for user "${external_user_id}". Call doordash_join_group_order first.`,
-          );
-        }
-        await api.guests.finalizeGuestOrder(cart_id, external_user_id);
-        return ok(
-          `**${session.firstName} ${session.lastName}** is done adding items.`,
-        );
-      }),
-  );
+  // doordash_finalize_guest_order is not registered by default.
+  // The underlying method (api.guests.finalizeGuestOrder) is available
+  // if needed — it marks a guest's sub-cart as finalized, which only
+  // matters when external users join via the share link and the order
+  // creator needs to see who's done adding items.
 }

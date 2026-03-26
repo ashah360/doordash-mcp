@@ -1,4 +1,9 @@
-query detailedCartItems($orderCartId: ID!, $corporateIndividualOrdersEnabled: Boolean, $deliveryOptionType: DeliveryOptionType, $isCardPayment: Boolean) {
+query detailedCartItems(
+  $orderCartId: ID!
+  $corporateIndividualOrdersEnabled: Boolean
+  $deliveryOptionType: DeliveryOptionType
+  $isCardPayment: Boolean
+) {
   orderCart(
     id: $orderCartId
     corporateIndividualOrdersEnabled: $corporateIndividualOrdersEnabled

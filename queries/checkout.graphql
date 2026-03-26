@@ -1,4 +1,22 @@
-query checkout($orderCartId: ID!, $corporateIndividualOrdersEnabled: Boolean, $includeCompanyPaymentInfo: Boolean!, $deliveryOptionType: DeliveryOptionType, $isCardPayment: Boolean, $programId: String, $isDashPassUpsellSelected: Boolean, $routineReorderItemIds: [String], $selectedBudgetId: String, $scheduledTime: String, $supplementalPaymentDetailsList: [SupplementalPaymentDetails!], $includeRewardBalanceAvailable: Boolean!, $deliveryOptionInfo: DeliveryOptionInfo, $landingPageType: LandingPageType, $shouldApplyCredits: Boolean, $paymentMethodUuid: String, $paymentMethodType: PaymentMethodType) {
+query checkout(
+  $orderCartId: ID!
+  $corporateIndividualOrdersEnabled: Boolean
+  $includeCompanyPaymentInfo: Boolean!
+  $deliveryOptionType: DeliveryOptionType
+  $isCardPayment: Boolean
+  $programId: String
+  $isDashPassUpsellSelected: Boolean
+  $routineReorderItemIds: [String]
+  $selectedBudgetId: String
+  $scheduledTime: String
+  $supplementalPaymentDetailsList: [SupplementalPaymentDetails!]
+  $includeRewardBalanceAvailable: Boolean!
+  $deliveryOptionInfo: DeliveryOptionInfo
+  $landingPageType: LandingPageType
+  $shouldApplyCredits: Boolean
+  $paymentMethodUuid: String
+  $paymentMethodType: PaymentMethodType
+) {
   orderCart(
     id: $orderCartId
     corporateIndividualOrdersEnabled: $corporateIndividualOrdersEnabled

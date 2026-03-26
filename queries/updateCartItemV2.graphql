@@ -1,5 +1,11 @@
-mutation updateCartItemV2($updateCartItemInput: UpdateCartItemInput!, $fulfillmentContext: FulfillmentContextInput!) {
-  updateCartItemV2(updateCartItemInput: $updateCartItemInput, fulfillmentContext: $fulfillmentContext) {
+mutation updateCartItemV2(
+  $updateCartItemInput: UpdateCartItemInput!
+  $fulfillmentContext: FulfillmentContextInput!
+) {
+  updateCartItemV2(
+    updateCartItemInput: $updateCartItemInput
+    fulfillmentContext: $fulfillmentContext
+  ) {
     ...ConsumerOrderCartFragment
     __typename
   }

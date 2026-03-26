@@ -5,6 +5,7 @@ export interface MenuItem {
   name: string;
   displayPrice: string;
   description: string;
+  imgUrl: string;
   quickAddEligible: boolean;
   quickAddPrice: number;
   quickAddNestedOptions: string;
@@ -23,6 +24,8 @@ export interface StoreMenu {
   deliveryMinutes: number;
   priceRange: string;
   menuId: string;
+  address: string;
+  coverImgUrl: string;
   categories: MenuCategory[];
 }
 
@@ -53,6 +56,10 @@ export interface ItemDetails {
   name: string;
   description: string;
   unitAmount: number;
+  imgUrl: string;
+  calories: string;
+  quantityLimit: number;
+  dietaryTags: string[];
   optionGroups: ItemOptionGroup[];
 }
 
@@ -83,6 +90,7 @@ export class MenuAPI {
           name: item.name,
           displayPrice: item.displayPrice ?? "",
           description: item.description ?? "",
+          imgUrl: item.imgUrl ?? "",
           quickAddEligible: !!item.quickAddContext?.isEligible,
           quickAddPrice: item.quickAddContext?.price?.unitAmount ?? 0,
           quickAddNestedOptions: item.quickAddContext?.nestedOptions ?? "[]",
@@ -101,6 +109,8 @@ export class MenuAPI {
       deliveryMinutes: header.asapMinutes ?? 0,
       priceRange: header.priceRangeDisplayString ?? "",
       menuId: String(feed.menuBook?.id ?? ""),
+      address: header.address?.printableAddress ?? "",
+      coverImgUrl: header.coverImgUrl ?? "",
       categories,
     };
   }
@@ -168,6 +178,12 @@ export class MenuAPI {
       name: header?.name ?? "Item",
       description: header?.description ?? "",
       unitAmount: header?.unitAmount ?? 0,
+      imgUrl: header?.imgUrl ?? "",
+      calories: header?.caloricInfoDisplayString ?? "",
+      quantityLimit: header?.quantityLimit ?? 0,
+      dietaryTags: (header?.dietaryTagsList ?? []).map(
+        (t: any) => t.fullTagDisplayString,
+      ),
       optionGroups,
     };
   }

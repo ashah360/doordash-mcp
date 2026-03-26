@@ -1,4 +1,42 @@
-mutation createOrderFromCart($cartId: ID!, $total: Int!, $sosDeliveryFee: Int!, $isPickupOrder: Boolean!, $verifiedAgeRequirement: Boolean!, $deliveryTime: String!, $menuOptions: [String], $stripeToken: String, $attributionData: String, $fulfillsOwnDeliveries: Boolean, $budgetId: String, $teamId: String, $giftOptions: GiftOptionsInput, $recipientShippingDetails: RecipientShippingDetails, $storeId: String, $tipAmounts: [TipAmount!], $paymentMethod: Int, $deliveryOptionType: DeliveryOptionType, $workOrderOptions: WorkOrderOptionsInput, $isCardPayment: Boolean, $clientFraudContext: PaymentClientFraudContextInput, $programId: String, $membershipId: String, $dropoffPreferences: String, $routineReorderDetails: RoutineReorderDetails, $supplementalPaymentDetailsList: [SupplementalPaymentDetails!], $monitoringContext: CreateOrderFromCartMonitoringContextInput, $rewardBalanceApplied: RewardBalanceDetailsInput, $deliveryOptionInfo: DeliveryOptionInfo, $hasAccessibilityRequirements: Boolean, $shouldApplyCredits: Boolean, $dasherPickupInstructions: String, $paymentMethodUuid: String, $paymentMethodType: PaymentMethodType, $deviceTimezone: String, $paymentMethodBrand: String, $submitPlatform: String) {
+mutation createOrderFromCart(
+  $cartId: ID!
+  $total: Int!
+  $sosDeliveryFee: Int!
+  $isPickupOrder: Boolean!
+  $verifiedAgeRequirement: Boolean!
+  $deliveryTime: String!
+  $menuOptions: [String]
+  $stripeToken: String
+  $attributionData: String
+  $fulfillsOwnDeliveries: Boolean
+  $budgetId: String
+  $teamId: String
+  $giftOptions: GiftOptionsInput
+  $recipientShippingDetails: RecipientShippingDetails
+  $storeId: String
+  $tipAmounts: [TipAmount!]
+  $paymentMethod: Int
+  $deliveryOptionType: DeliveryOptionType
+  $workOrderOptions: WorkOrderOptionsInput
+  $isCardPayment: Boolean
+  $clientFraudContext: PaymentClientFraudContextInput
+  $programId: String
+  $membershipId: String
+  $dropoffPreferences: String
+  $routineReorderDetails: RoutineReorderDetails
+  $supplementalPaymentDetailsList: [SupplementalPaymentDetails!]
+  $monitoringContext: CreateOrderFromCartMonitoringContextInput
+  $rewardBalanceApplied: RewardBalanceDetailsInput
+  $deliveryOptionInfo: DeliveryOptionInfo
+  $hasAccessibilityRequirements: Boolean
+  $shouldApplyCredits: Boolean
+  $dasherPickupInstructions: String
+  $paymentMethodUuid: String
+  $paymentMethodType: PaymentMethodType
+  $deviceTimezone: String
+  $paymentMethodBrand: String
+  $submitPlatform: String
+) {
   createOrderFromCart(
     cartId: $cartId
     total: $total

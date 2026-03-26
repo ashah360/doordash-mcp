@@ -15,6 +15,14 @@ query itemPage(
       name
       description
       unitAmount
+      imgUrl
+      caloricInfoDisplayString
+      quantityLimit
+      dietaryTagsList {
+        type
+        abbreviatedTagDisplayString
+        fullTagDisplayString
+      }
     }
     optionLists {
       name
